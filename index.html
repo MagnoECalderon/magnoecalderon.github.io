@@ -131,7 +131,7 @@ input{width:100%;border:1px solid #d7e1ee;background:#fff;color:var(--ink);borde
       <article class="panel card-white"><details><summary>Detalle mensual</summary><button id="downloadCsv" class="ghost-btn" type="button" style="margin-top:14px">Descargar CSV</button><div class="table-wrap"><table class="projection-table"><thead><tr><th>Mes</th><th>Base</th><th>%</th><th>Recompensa</th><th>Saldo final</th></tr></thead><tbody id="projectionBody"></tbody></table></div></details></article>
     </section>
 
-    <p class="footer-note"><b>Nota:</b> esta es una simulación informativa. No representa garantía de rendimiento, oferta pública ni recomendación individual de inversión. La asesoría final debe validarse directamente con el asesor.</p>
+    <p class="footer-note"><b>Nota:</b> esta es una simulación informativa. No representa garantía de rendimiento, oferta pública ni recomendación individual de inversión. La asesoría final debe validarse directamente con el asesor.<BR>En el mes de diciembre únicamente se generará la mitad de los rendimientos habituales</p>
   </main>
   <div class="sticky-cta"><div><span>¿Quieres revisar tu escenario?</span><small>Magno Calderón Ortega · WhatsApp 443 128 1154</small></div><a id="waSticky" class="wa-btn" target="_blank" rel="noopener">Contactar</a></div>
   <div id="toast" class="toast" role="status" aria-live="polite">Listo</div>
@@ -153,15 +153,39 @@ function calculate(){
   const months=Math.max(1,Math.min(240,num($('months')?.value)||1));
   const mode=document.querySelector('input[name="mode"]:checked')?.value||'withdraw';
   const name=($('clientName')?.value||'').trim(); if($('months')) $('months').value=months;
+  const startMonth = Number($('startMonth')?.value || 0); // 0=Enero ... 11=Diciembre
   let balance=initial,totalRewards=0,contributions=initial; projection=[];
   for(let m=1;m<=months;m++){
-    const contribution=m===1?0:monthly, base=balance+contribution, rate=rateFor(base), reward=base*rate;
+    const contribution = m===1 ? 0 : monthly;
+    const base = balance + contribution;
+    // Mes calendario (0=Enero ... 11=Diciembre)
+    const calendarMonth = (startMonth + m - 1) % 12;
+    let rate = rateFor(base);
+    // Si es diciembre, paga sólo el 50%
+    if (calendarMonth === 11) {
+      rate *= 0.5;
+    }
+    const reward = base * rate;
     totalRewards+=reward; contributions+=contribution;
     const end=mode==='reinvest'?base+reward:base;
-    projection.push({m,base,rate,reward,end}); balance=end;
+    projection.push({m,calendarMonth,base,rate,reward,end}); balance=end;
   }
-  const last=projection[projection.length-1]||{base:initial,rate:rateFor(initial),reward:0,end:initial};
-  const initialRate=rateFor(initial), nt=nextTier(initial);
+  
+  const initialCalendarMonth = startMonth;
+  let initialRate = rateFor(initial);
+  if (initialCalendarMonth === 11) {
+    initialRate *= 0.5;
+  }
+  const last = projection[projection.length-1] || {
+    base: initial,
+    rate: initialRate,
+    reward: 0,
+    end: initial
+  };
+
+  const nt = nextTier(initial);
+  
+  
   set('rateNow',pct(initialRate)); set('heroRate',pct(initialRate)); set('finalCapital',mxn.format(last.end));
   set('lastReward',mxn.format(last.reward)); set('totalRewards',mxn.format(totalRewards)); set('totalContributions',mxn.format(contributions));
   set('modeText',mode==='reinvest'?'Recompensas reinvertidas al capital':'Recompensas retiradas cada mes');
