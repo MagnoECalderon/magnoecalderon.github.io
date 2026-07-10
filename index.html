@@ -161,11 +161,11 @@ function calculate(){
     // Mes calendario (0=Enero ... 11=Diciembre)
     const calendarMonth = (startMonth + m - 1) % 12;
     let rate = rateFor(base);
-    const reward = base * rate;
     // Si es diciembre, paga sólo el 50%
     if (calendarMonth === 11) {
-      reward *= 0.5;
+      rate *= 0.5;
     }
+    const reward = base * rate;
     totalRewards+=reward; contributions+=contribution;
     const end=mode==='reinvest'?base+reward:base;
     projection.push({m,calendarMonth,base,rate,reward,end}); balance=end;
