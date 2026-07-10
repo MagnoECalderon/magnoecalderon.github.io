@@ -173,7 +173,9 @@ function calculate(){
   
   const initialCalendarMonth = startMonth;
   let initialRate = rateFor(initial);
- 
+  if (initialCalendarMonth === 11) {
+    initialRate *= 0.5;
+  }
   const last = projection[projection.length-1] || {
     base: initial,
     rate: initialRate,
