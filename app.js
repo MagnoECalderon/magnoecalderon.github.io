@@ -14,7 +14,7 @@ function calculate(){
   const initial=Math.max(0,num($('initial')?.value)), monthly=Math.max(0,num($('monthly')?.value));
   const months=Math.max(1,Math.min(240,num($('months')?.value)||1));
   const mode=document.querySelector('input[name="mode"]:checked')?.value||'withdraw';
-  const name=($('clientName')?.value||'').trim(); if($('months')) $('months').value=months;
+  const name=($('clientName')?.value||'').trim();
   const startMonth = Number($('startMonth')?.value || 0); // 0=Enero ... 11=Diciembre
   let balance=initial,totalRewards=0,contributions=initial; projection=[];
   for(let m=1;m<=months;m++){
@@ -86,8 +86,16 @@ function copySummary(){
 }
 function toast(msg){const t=$('toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200)}
 function format(id){const el=$(id); if(!el)return; const v=num(el.value); el.value=v?v.toLocaleString('es-MX'):''}
+function clampMonths(){const el=$('months'); if(!el)return; el.value=Math.max(1,Math.min(240,num(el.value)||1))}
 function init(){
   ['clientName','months'].forEach(id=>$(id)?.addEventListener('input',calculate));
+  $('months')?.addEventListener('blur',()=>{clampMonths(); calculate()});
+  document.querySelectorAll('.stepper-btn').forEach(btn=>btn.addEventListener('click',()=>{
+    const el=$('months'); if(!el) return;
+    const current=Math.max(1,Math.min(240,num(el.value)||24));
+    el.value=Math.max(1,Math.min(240,current+(Number(btn.dataset.step)||0)));
+    calculate();
+  }));
   ['initial','monthly'].forEach(id=>{const el=$(id); if(el){el.addEventListener('input',calculate); el.addEventListener('change',calculate); el.addEventListener('blur',()=>{format(id); calculate()})}});
   document.querySelectorAll('input[name="mode"]').forEach(el=>el.addEventListener('change',calculate));
   document.querySelectorAll('[data-amount]').forEach(btn=>btn.addEventListener('click',()=>{const el=$('initial'); if(el){el.value=Number(btn.dataset.amount).toLocaleString('es-MX'); calculate()}}));
